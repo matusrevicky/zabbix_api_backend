@@ -16,7 +16,6 @@ app.get('/login', async function (req, res) {
     res.send(check);
 })
 
-
 /**
  * Logout
  * @function logout
@@ -38,6 +37,17 @@ app.get('/host',  async function (req, res) {
     process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
     host = await z.host.get();
     res.send(host);
+})
+
+// how to create trigger map https://www.zabbix.com/documentation/4.4/manual/api/reference/map/create
+app.get('/map',  async function (req, res) {
+    process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+    map = await z.map.create({
+        "name": "Map",
+        "width": 600,
+        "height": 600
+    });
+    res.send(map);
 })
 
 
