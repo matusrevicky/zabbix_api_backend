@@ -151,7 +151,46 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'             
+                $ref: '#/components/schemas/Error'
+  /zabbix/triggers:
+    post:
+      tags:
+        - Zabbix
+      description: Create a new example
+      requestBody:
+        description: an example
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExampleTriggers'
+        required: true
+      responses:
+        201:
+          description: Return the example with the specified id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Example'
+        4XX:
+          description: Example not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        5XX:
+          description: Example not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /zabbix/prepare_images:
+    get:
+      tags:
+        - Zabbix
+      responses:
+        200:
+          description: Return the API specification
+          content: {}
   /spec:
     get:
       tags:
@@ -249,3 +288,12 @@ components:
         triggerid:
           type: string
           example: '13467'
+
+    ExampleTriggers:
+      type: object
+      title: ''
+      description: ' Entity'
+      properties:
+        filter:
+          type: object
+          example: { 'hostid': 10084 }

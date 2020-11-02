@@ -18,6 +18,14 @@ export class ZabbixController {
     ZabbixService.create_map(req.body).then((r) => res.json(r));
   }
 
+  get_triggers(req, res) {
+    ZabbixService.get_triggers(req.body).then((r) => res.json(r));
+  }
+
+  // for testing
+  prepare_images(req, res) {
+    ZabbixService.prepare_images().then((r) => res.json(r));
+  }
 
 }
 export default new ZabbixController();
