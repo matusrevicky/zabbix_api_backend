@@ -1,4 +1,5 @@
 import Express from 'express';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import * as path from 'path';
 import * as bodyParser from 'body-parser';
@@ -9,7 +10,7 @@ import * as OpenApiValidator from 'express-openapi-validator';
 import errorHandler from '../api/middlewares/error.handler';
 
 const app = new Express();
-
+app.use(cors());
 // const session = require('express-session');
 // const redis = require('redis');
 // const redisStore = require('connect-redis')(session);
