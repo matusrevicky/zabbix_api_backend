@@ -6,105 +6,27 @@ info:
 servers:
   - url: /api/v1
 tags:
-  - name: Examples
-    description: Simple example endpoints
   - name: Specification
     description: The swagger API specification
 paths:
-  /examples:
-    get:
-      tags:
-        - Examples
-      description: Fetch all examples
-      responses:
-        200:
-          description: Return the example with the specified id
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Example'
-        4XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        5XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  /zabbix/login:
     post:
       tags:
-        - Examples
-      description: Create a new example
+        - Zabbix
       requestBody:
-        description: an example
+        description: login body
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExampleBody'
-        required: true
-      responses:
-        201:
-          description: Return the example with the specified id
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Example'
-        4XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        5XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /examples/{id}:
-    get:
-      tags:
-        - Examples
-      parameters:
-        - name: id
-          in: path
-          description: The id of the example to retrieve
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: Return the example with the specified id
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Example'
-        4XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        5XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /zabbix/login:
-    get:
-      tags:
-        - Zabbix
+              $ref: '#/components/schemas/LoginReq'
       responses:
         200:
           description: Return the API specification
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginRes'
+
   /zabbix/logout:
     get:
       tags:
@@ -201,6 +123,78 @@ paths:
           content: {}
 components:
   schemas:
+    LoginReq:
+      type: object
+      properties:
+        url:
+          type: string
+          example: '127.0.0.1'
+        username:
+          type: string
+          example: 'Admin'
+        password:
+          type: string
+          example: 'zabbix'
+    LoginRes:
+      type: object
+      properties:
+        userid:
+          type: integer
+          example: 1
+        alias:
+          type: string
+          example: 'Admin'
+        name:
+          type: string
+          example: 'Zabbix'
+        surname:
+          type: string
+          example: 'Administrator'
+        url:
+          type: string
+          example: ''
+        autologin:
+          type: string
+          example: '1'
+        autologout:
+          type: string
+          example: '0'
+        lang:
+          type: string
+          example: 'en_GB'
+        refresh:
+          type: string
+          example: '30s'
+        type:
+          type: string
+          example: '3'
+        theme:
+          type: string
+          example: 'default'
+        attempt_failed:
+          type: string
+          example: '0'
+        attempt_ip:
+          type: string
+          example: '172.20.240.0'
+        attempt_clock:
+          type: string
+          example: "1603294197"
+        rows_per_page:
+          type: string
+          example: '50'
+        sessionid:
+          type: string
+          example: "db4b5ac343ce638055e694f946d48307"
+        debug_mode:
+          type: integer
+          example: 0
+        userip:
+          type: string
+          example: '172.20.240.0'
+        gui_access:
+          type: integer
+          example: 0
     Example:
       type: object
       properties:

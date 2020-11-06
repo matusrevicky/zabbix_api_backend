@@ -6,10 +6,11 @@ const Zabbix = require('zabbix-rpc');
 const z = new Zabbix('127.0.0.1');
 
 class ZabbixService {
-  login() {
+  async login(login) {
     l.info(`${this.constructor.name}.login()`);
     process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-    return z.user.login('Admin', 'zabbix').then((r) => z.user.check());
+    await z.user.login(login.username, login.password)
+    return z.user.check();
   }
 
   logout() {

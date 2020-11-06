@@ -10,6 +10,11 @@ import errorHandler from '../api/middlewares/error.handler';
 
 const app = new Express();
 
+// const session = require('express-session');
+// const redis = require('redis');
+// const redisStore = require('connect-redis')(session);
+// const client  = redis.createClient();
+
 export default class ExpressServer {
   constructor() {
     const root = path.normalize(`${__dirname}/../..`);
@@ -19,6 +24,14 @@ export default class ExpressServer {
       process.env.OPENAPI_ENABLE_RESPONSE_VALIDATION &&
       process.env.OPENAPI_ENABLE_RESPONSE_VALIDATION.toLowerCase() === 'true'
     );
+
+    // app.use(session({
+    //   secret: process.env.SESSION_SECRET,
+    //   // create new redis store.
+    //   store: new redisStore({ host: 'localhost', port: 6379, client: client,ttl : 260}),
+    //   saveUninitialized: false,
+    //   resave: false
+    // }));
 
     app.set('appPath', `${root}client`);
     app.use(bodyParser.json({ limit: process.env.REQUEST_LIMIT || '100kb' }));

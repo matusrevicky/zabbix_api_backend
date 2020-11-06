@@ -3,7 +3,7 @@ import ZabbixService from '../../services/zabbix.service';
 export class ZabbixController {
 
   login(req, res) {
-    ZabbixService.login().then((r) => res.json(r));
+    ZabbixService.login(req.body).then((r) => res.json(r));
   }
 
   logout(req, res) {
