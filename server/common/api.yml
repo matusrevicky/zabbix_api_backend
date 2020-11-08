@@ -6,6 +6,8 @@ info:
 servers:
   - url: /api/v1
 tags:
+  - name: Zabbix
+    description: Zabbix API
   - name: Specification
     description: The swagger API specification
 paths:
@@ -18,14 +20,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginReq'
+              $ref: '#/components/schemas/Login'
       responses:
         200:
-          description: Return the API specification
+          description: Return user info
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginRes'
+                $ref: '#/components/schemas/Login200'
+        4XX:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        5XX:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /zabbix/logout:
     get:
@@ -33,86 +47,50 @@ paths:
         - Zabbix
       responses:
         200:
-          description: Return the API specification
+          description: Boolean
           content: {}
+
   /zabbix/hosts:
     get:
       tags:
         - Zabbix
       responses:
         200:
-          description: Return the API specification
+          description: Returns array of hosts
           content: {}
-  /zabbix/map:
+
+  /zabbix/maps:
     post:
       tags:
         - Zabbix
-      description: Create a new example
+      description: Create trigger maps for array of hostid
       requestBody:
-        description: an example
+        description: array of hostid
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExampleMap'
+              $ref: '#/components/schemas/CreateMaps'
         required: true
-      responses:
-        201:
-          description: Return the example with the specified id
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Example'
-        4XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        5XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /zabbix/triggers:
-    post:
-      tags:
-        - Zabbix
-      description: Create a new example
-      requestBody:
-        description: an example
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExampleTriggers'
-        required: true
-      responses:
-        201:
-          description: Return the example with the specified id
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Example'
-        4XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        5XX:
-          description: Example not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /zabbix/prepare_images:
-    get:
-      tags:
-        - Zabbix
       responses:
         200:
-          description: Return the API specification
-          content: {}
+          description: Returns array of objects with sysmapids array property
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMaps200'
+        4XX:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        5XX:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /spec:
     get:
       tags:
@@ -121,9 +99,10 @@ paths:
         200:
           description: Return the API specification
           content: {}
+
 components:
   schemas:
-    LoginReq:
+    Login:
       type: object
       properties:
         url:
@@ -135,7 +114,8 @@ components:
         password:
           type: string
           example: 'zabbix'
-    LoginRes:
+          
+    Login200:
       type: object
       properties:
         userid:
@@ -195,99 +175,39 @@ components:
         gui_access:
           type: integer
           example: 0
-    Example:
+
+    CreateMaps:
       type: object
+      title: hostids array
+      description: hostids array
       properties:
-        id:
-          type: integer
-          example: 3
-        name:
-          type: string
-          example: example 3
+        hostids:
+          items:
+            type: integer
+            enum:
+              - 10084
+    
+    CreateMaps200:
+      type: array
+      title: array of objects with sysmapids array property
+      description: array of objects with sysmapids array property
+      items:
+        type: object
+        properties:
+          sysmapids:
+            type: array
+            items:
+              type: integer
+              enum:
+                - 42
+
     Error:
-      type: object
-      additionalProperties: true
-
-    ExampleBody:
-      title: example
-      required:
-        - name
-      type: object
-      properties:
-        name:
-          type: string
-          example: no_stress
-
-    ExampleMap:
-      type: object
-      title: ''
-      description: ' Entity'
-      properties:
-        name:
-          type: string
-          example: TEST5 Trigger map
-        width:
-          type: integer
-          example: 600
-        height:
-          type: integer
-          example: 600
-        selements:
-          type: array
-          items:
-            $ref: '#/components/schemas/Selement'
-
-    Selement:
-      type: object
-      title: Selement
-      description: Selement Entity
-      properties:
-        elements:
-          type: array
-          items:
-            $ref: '#/components/schemas/Element'
-        label:
-          type: string
-          example: '2'
-        label_location:
-          type: string
-          example: '3'
-        elementtype:
-          type: integer
-          example: 2
-        iconid_off:
-          type: string
-          example: '2'
-        iconid_disabled:
-          type: string
-          example: '2'
-        iconid_maintenance:
-          type: string
-          example: '2'
-        iconid_on:
-          type: string
-          example: '2'
-        x:
-          type: integer
-          example: 100
-        y:
-          type: integer
-          example: 150
-
-    Element:
-      type: object
-      title: Element
-      description: Element Entity
-      properties:
-        triggerid:
-          type: string
-          example: '13467'
-
-    ExampleTriggers:
-      type: object
-      title: ''
-      description: ' Entity'
-      properties:
-        filter:
-          type: object
-          example: { 'hostid': 10084 }
+      type: array
+      title: array of error objects
+      description: array of error objects
+      items:
+        type: object
+        properties:
+          error:
+            type: object
+            additionalProperties: true

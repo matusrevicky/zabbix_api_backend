@@ -6,6 +6,4 @@ export default express
   .post('/login', zabbixControler.login)
   .get('/logout', zabbixControler.logout)
   .get('/hosts', zabbixControler.get_hosts)
-  .post('/map', zabbixControler.create_map)
-  .post('/triggers', zabbixControler.get_triggers)
-  .get('/prepare_images', zabbixControler.prepare_images) //for testing
+  .post('/maps', zabbixControler.create_maps)

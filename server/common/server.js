@@ -10,7 +10,7 @@ import * as OpenApiValidator from 'express-openapi-validator';
 import errorHandler from '../api/middlewares/error.handler';
 
 const app = new Express();
-app.use(cors());
+
 // const session = require('express-session');
 // const redis = require('redis');
 // const redisStore = require('connect-redis')(session);
@@ -34,6 +34,15 @@ export default class ExpressServer {
     //   resave: false
     // }));
 
+    // client.on('error', function(err) {
+    //   console.log('Redis error: ' + err);
+    // });
+  
+    // client.on("ready",function () {
+    //   console.log("Redis is ready");
+    // });
+
+    app.use(cors());
     app.set('appPath', `${root}client`);
     app.use(bodyParser.json({ limit: process.env.REQUEST_LIMIT || '100kb' }));
     app.use(
