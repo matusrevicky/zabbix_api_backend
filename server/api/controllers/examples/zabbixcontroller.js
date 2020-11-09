@@ -7,7 +7,7 @@ export class ZabbixController {
   }
 
   logout(req, res) {
-    ZabbixService.logout().then((r) => res.json(r));
+    ZabbixService.logout(req).then((r) => res.json(r));
   }
 
   get_hosts(req, res) {
