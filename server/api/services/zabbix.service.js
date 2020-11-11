@@ -2,26 +2,28 @@ import l from '../../common/logger';
 import fs from 'fs';
 import path from 'path';
 
-const Zabbix = require('zabbix-rpc');
-const z = new Zabbix('127.0.0.1');
+var shopifys = require("./object-zabbixes");
+
 
 class ZabbixService {
   async login(req) {
     l.info(`${this.constructor.name}.login()`);
     process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-    await z.user.login(req.body.username, req.body.password);
+    var z = shopifys[req.session.id];
     return z.user.check();
   }
 
-  logout() {
+  logout(req) {
     l.info(`${this.constructor.name}.logout()`);
     process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+    var z = shopifys[req.session.id];
     return z.user.logout();
   }
 
-  get_hosts() {
+  get_hosts(req) {
     l.info(`${this.constructor.name}.get_hosts()`);
     process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+    var z = shopifys[req.session.id];
     return z.host.get();
   }
 

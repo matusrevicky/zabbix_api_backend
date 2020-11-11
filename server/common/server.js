@@ -11,7 +11,13 @@ import errorHandler from '../api/middlewares/error.handler';
 
 const app = new Express();
 
-// const session = require('express-session');
+//**********testing start*************
+// just for testing purposes memorystore gets deleted when server is restrted
+var session = require('express-session')
+var MemoryStore = require('memorystore')(session)
+var middlewareZabbix = require("../api/middlewares/middleware-zabbix.js");
+//**********testing end*********** */
+
 // const redis = require('redis');
 // const redisStore = require('connect-redis')(session);
 // const client  = redis.createClient();
@@ -37,10 +43,25 @@ export default class ExpressServer {
     // client.on('error', function(err) {
     //   console.log('Redis error: ' + err);
     // });
-  
+
     // client.on("ready",function () {
     //   console.log("Redis is ready");
     // });
+
+
+//**********testing start*************
+// just for testing purposes memorystore gets deleted when server is restrted
+    app.use(session({
+      cookie: { maxAge: 86400000 },
+      store: new MemoryStore({
+        checkPeriod: 86400000 // prune expired entries every 24h
+      }),
+      saveUninitialized: false,
+      resave: false,
+      secret: 'pasd4684sdfgsgs89d70f8435-afds[]\[\;asdf.asf93'
+    }))
+//**********testing end*********** */
+    
 
     app.use(cors());
     app.set('appPath', `${root}client`);
@@ -63,6 +84,10 @@ export default class ExpressServer {
         ignorePaths: /.*\/spec(\/|$)/,
       })
     );
+  //**********testing start*************
+  // just for testing purposes memorystore gets deleted when server is restrted
+    app.use(middlewareZabbix);
+  //**********testing end*********** */  
   }
 
   router(routes) {
@@ -74,8 +99,7 @@ export default class ExpressServer {
   listen(port = process.env.PORT) {
     const welcome = (p) => () =>
       l.info(
-        `up and running in ${
-          process.env.NODE_ENV || 'development'
+        `up and running in ${process.env.NODE_ENV || 'development'
         } @: ${os.hostname()} on port: ${p}}`
       );
 

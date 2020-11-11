@@ -22,6 +22,7 @@
     "express": "^4.17.1",
     "express-openapi-validator": "^4.2.0",
     "express-session": "^1.17.1",
+    "memorystore": "^1.6.4",
     "pino": "^6.7.0",
     "redis": "^3.0.2",
     "zabbix-rpc": "^1.2.1"
