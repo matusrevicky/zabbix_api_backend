@@ -5,5 +5,6 @@ export default express
   .Router()
   .post('/login', zabbixControler.login)
   .get('/logout', zabbixControler.logout)
-  .get('/hosts', zabbixControler.get_hosts)
+  .get('/host_groups', zabbixControler.get_host_groups)
+  .post('/hosts', zabbixControler.get_hosts)
   .post('/maps', zabbixControler.create_maps)

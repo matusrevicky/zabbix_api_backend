@@ -50,10 +50,26 @@ paths:
           description: Boolean
           content: {}
 
-  /zabbix/hosts:
+  /zabbix/host_groups:
     get:
       tags:
         - Zabbix
+      responses:
+        200:
+          description: Returns array of host groups
+          content: {}
+
+  /zabbix/hosts:
+    post:
+      tags:
+        - Zabbix
+      requestBody:
+        required: true
+        description: request body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HostsByGroupids'
       responses:
         200:
           description: Returns array of hosts
@@ -114,6 +130,15 @@ components:
         password:
           type: string
           example: 'zabbix'
+
+    HostsByGroupids:
+      type: object
+      properties:
+        groupids:
+          items:
+            type: integer
+            example: 4
+
           
     Login200:
       type: object
@@ -183,9 +208,8 @@ components:
       properties:
         hostids:
           items:
-            type: integer
-            enum:
-              - 10084
+            type: string
+            example: '10084'
     
     CreateMaps200:
       type: array
