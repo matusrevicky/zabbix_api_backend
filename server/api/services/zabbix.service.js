@@ -9,7 +9,7 @@ class ZabbixService {
   async login(req) {
     l.info(`${this.constructor.name}.login()`);
     var z = zabbixes[req.session.id];
-    console.log(zabbixes);
+    // console.log(zabbixes);
     return z.user.check();
   }
 
