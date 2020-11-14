@@ -2,50 +2,58 @@ import l from '../../common/logger';
 import fs from 'fs';
 import path from 'path';
 
-var shopifys = require("./object-zabbixes");
+var zabbixes = require("./object-zabbixes");
 
 
 class ZabbixService {
   async login(req) {
     l.info(`${this.constructor.name}.login()`);
-    process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-    var z = shopifys[req.session.id];
+    var z = zabbixes[req.session.id];
+    // console.log(zabbixes);
     return z.user.check();
   }
 
   logout(req) {
     l.info(`${this.constructor.name}.logout()`);
-    process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-    var z = shopifys[req.session.id];
+    var z = zabbixes[req.session.id];
+    delete zabbixes[req.session.id]; 
+    req.session.destroy();
     return z.user.logout();
+  }
+
+  get_host_groups(req) {
+    l.info(`${this.constructor.name}.get_host_groups()`);
+    var z = zabbixes[req.session.id];
+    return z.host.group.get();
   }
 
   get_hosts(req) {
     l.info(`${this.constructor.name}.get_hosts()`);
-    process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-    var z = shopifys[req.session.id];
-    return z.host.get();
+    var z = zabbixes[req.session.id];
+    const groupids = req.body.groupids;
+    const params = {
+      "groupids": groupids
+    };
+    return z.host.get(params);
   }
 
   async create_maps(req) {
-    l.info(`${this.constructor.name}.create_mapss()`);
-    const checkUser = await z.user.check();
-    if (checkUser.error){
-      return checkUser;
-    }
+    l.info(`${this.constructor.name}.create_maps()`);
+    var z = zabbixes[req.session.id];
 
     const hostids = req.body.hostids;
     const results = hostids.map(async (hostid) => {
-      return this.create_map(hostid);
+      return this.create_map(z, hostid);
     });
 
     return Promise.all(results);
   }
 
-  async create_map(hostid) {
-    const triggers = await this.get_triggers_by_hostid(hostid);
+  async create_map(z, hostid) {
+    const triggers = await this.get_triggers_by_hostid(z, hostid);
+    // console.log(triggers)
     const mapSize = this.compute_map_size(triggers.length, 50);
-    const images = await this.prepare_images();
+    const images = await this.prepare_images(z);
     const map = this.create_map_params(hostid, triggers, mapSize, images, 50);
     return z.map.create(map);
   }
@@ -105,39 +113,35 @@ class ZabbixService {
     return [width, 300];
   }
 
-  get_triggers_by_hostid(hostid){
+  get_triggers_by_hostid(z, hostid){
     const params = {
       "filter": {
         "hostid": hostid
       }
     }
-    return this.get_triggers(params);
+    return z.trigger.get(params);;
   }
 
-  get_triggers(params) {
-    return z.trigger.get(params);
-  }
-
-  async prepare_images() {
+  async prepare_images(z) {
     l.info(`${this.constructor.name}.prepare_images()`);
     const imagesDirPath = path.resolve(__dirname, '../../images');
     const images = fs.readdirSync(imagesDirPath);
     const imageNames = images.map((filename) => {return path.basename(filename, '.png')});
 
-    if(!await this.check_images(imageNames)){
-      this.upload_images(imagesDirPath, imageNames)
+    if(!await this.check_images(z, imageNames)){
+      this.upload_images(z, imagesDirPath, imageNames)
     }
 
-    return this.find_images_by_names(imageNames);
+    return this.find_images_by_names(z, imageNames);
   }
 
-  async check_images(imageNames) {
-    const result = await this.find_images_by_names(imageNames);
+  async check_images(z, imageNames) {
+    const result = await this.find_images_by_names(z, imageNames);
     
     return result.length == imageNames.length;
   }
 
-  async find_images_by_names(imageNames) {
+  async find_images_by_names(z, imageNames) {
     const params = {
       "filter": {"name": imageNames},
       "imagetype": "1" // 1 - icon, 2 - background
@@ -145,14 +149,14 @@ class ZabbixService {
     return await z.image.get(params);
   }
 
-  upload_images(imagesDirPath, imageNames) {
+  upload_images(z, imagesDirPath, imageNames) {
     l.info(`${this.constructor.name}.upload_images(${imagesDirPath}, ${imageNames})`);
     imageNames.forEach(async imageName => {
-      await this.upload_one_image(imagesDirPath, imageName);
+      await this.upload_one_image(z, imagesDirPath, imageName);
     });
   }
 
-  async upload_one_image(imageDirPath, imageName) {
+  async upload_one_image(z, imageDirPath, imageName) {
     l.info(`${this.constructor.name}.upload_one_image(${imageName})`);
     const image = fs.readFileSync(path.resolve(imageDirPath, imageName + '.png'), {encoding: 'base64'});
     const params = {
