@@ -69,7 +69,7 @@ export default class ExpressServer {
     }
     app.use(cors(corsOptions));
     app.set('appPath', `${root}client`);
-    app.use(bodyParser.json({ limit: process.env.REQUEST_LIMIT || '100kb' }));
+    app.use(bodyParser.json({ limit: process.env.REQUEST_LIMIT || '500kb' }));
     app.use(
       bodyParser.urlencoded({
         extended: true,

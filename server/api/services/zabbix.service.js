@@ -8,28 +8,27 @@ var zabbixes = require("./object-zabbixes");
 class ZabbixService {
   async login(req) {
     l.info(`${this.constructor.name}.login()`);
-    process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
     var z = zabbixes[req.session.id];
+    // console.log(zabbixes);
     return z.user.check();
   }
 
   logout(req) {
     l.info(`${this.constructor.name}.logout()`);
-    process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
     var z = zabbixes[req.session.id];
+    delete zabbixes[req.session.id]; 
+    req.session.destroy();
     return z.user.logout();
   }
 
   get_host_groups(req) {
     l.info(`${this.constructor.name}.get_host_groups()`);
-    process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
     var z = zabbixes[req.session.id];
     return z.host.group.get();
   }
 
   get_hosts(req) {
     l.info(`${this.constructor.name}.get_hosts()`);
-    process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
     var z = zabbixes[req.session.id];
     const groupids = req.body.groupids;
     const params = {
@@ -40,7 +39,6 @@ class ZabbixService {
 
   async create_maps(req) {
     l.info(`${this.constructor.name}.create_maps()`);
-    process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
     var z = zabbixes[req.session.id];
 
     const hostids = req.body.hostids;
@@ -53,6 +51,7 @@ class ZabbixService {
 
   async create_map(z, hostid) {
     const triggers = await this.get_triggers_by_hostid(z, hostid);
+    // console.log(triggers)
     const mapSize = this.compute_map_size(triggers.length, 50);
     const images = await this.prepare_images(z);
     const map = this.create_map_params(hostid, triggers, mapSize, images, 50);
