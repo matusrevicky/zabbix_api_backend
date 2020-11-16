@@ -64,6 +64,7 @@ export default class ExpressServer {
     
 
     const corsOptions = {
+      origin: true,
       credentials: true
     }
     app.use(cors(corsOptions));
