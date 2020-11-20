@@ -1,30 +1,33 @@
 import l from '../../common/logger';
 import fs from 'fs';
 import path from 'path';
-
-var zabbixes = require("./object-zabbixes");
+import Zabbix from 'zabbix-rpc';
 
 
 class ZabbixService {
   async login(req) {
     l.info(`${this.constructor.name}.login()`);
-    var z = zabbixes[req.session.id];
-    // console.log(zabbixes);
-    return z.user.check();
+    var z = await new Zabbix(req.session.host);
+    var sessionid = await z.user.login(req.session.user, req.session.pass);
+    var user = await z.user.check(sessionid)
+    await z.user.logout();
+    return user;
   }
 
-  logout(req) {
+  // destroys session in session store
+  async logout(req) {
     l.info(`${this.constructor.name}.logout()`);
-    var z = zabbixes[req.session.id];
-    delete zabbixes[req.session.id]; 
     req.session.destroy();
-    return z.user.logout();
+    return "session destroyed";
   }
 
-  get_host_groups(req) {
+  async get_host_groups(req) {
     l.info(`${this.constructor.name}.get_host_groups()`);
-    var z = zabbixes[req.session.id];
-    return z.host.group.get();
+    var z = await new Zabbix(req.session.host);
+    await z.user.login(req.session.user, req.session.pass);
+    var host_groups = await z.host.group.get();
+    await z.user.logout();
+    return host_groups;
   }
 
   get_hosts(req) {

@@ -58,12 +58,13 @@ export default class ExpressServer {
       }),
       saveUninitialized: false,
       resave: false,
-      secret: 'pasd4684sdfgsgs89d70f8435-afds[]\[\;asdf.asf93'
+      secret: process.env.SESSION_SECRET || 'secretToBeChangedInEnvironment'
     }))
 //**********testing end*********** */
     
 
     const corsOptions = {
+      origin: true,
       credentials: true
     }
     app.use(cors(corsOptions));
