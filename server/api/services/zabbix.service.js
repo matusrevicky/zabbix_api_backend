@@ -2,6 +2,7 @@ import l from '../../common/logger';
 import fs from 'fs';
 import path from 'path';
 import Zabbix from 'zabbix-rpc';
+import imageNames from '../../images/names.json';
 
 
 class ZabbixService {
@@ -30,26 +31,47 @@ class ZabbixService {
     return host_groups;
   }
 
-  get_hosts(req) {
+  async get_hosts(req) {
     l.info(`${this.constructor.name}.get_hosts()`);
-    var z = zabbixes[req.session.id];
+    var z = await new Zabbix(req.session.host);
+    await z.user.login(req.session.user, req.session.pass);
+
     const groupids = req.body.groupids;
     const params = {
       "groupids": groupids
     };
-    return z.host.get(params);
+
+    const hosts = await z.host.get(params);
+    const result = hosts.map(async (host) => {
+      const params = {
+        'filter': {
+          'name': host.name + ' MAP'
+        }
+      }
+      const map = await z.map.get(params)
+      if(map[0]){
+        host.map_link = this.createMapLink(z, map[0].sysmapid);
+      }
+      return host;
+    });
+    const hostsWithMap = await Promise.all(result);
+    await z.user.logout();
+    return hostsWithMap;
   }
 
   async create_maps(req) {
     l.info(`${this.constructor.name}.create_maps()`);
-    var z = zabbixes[req.session.id];
+    var z = await new Zabbix(req.session.host);
+    await z.user.login(req.session.user, req.session.pass);
 
     const hostids = req.body.hostids;
-    const results = hostids.map(async (hostid) => {
+    const promises = hostids.map(async (hostid) => {
       return this.create_map(z, hostid);
     });
 
-    return Promise.all(results);
+    var results = await Promise.all(promises);
+    await z.user.logout();
+    return results;
   }
 
   async create_map(z, hostid) {
@@ -57,58 +79,79 @@ class ZabbixService {
     // console.log(triggers)
     const mapSize = this.compute_map_size(triggers.length, 50);
     const images = await this.prepare_images(z);
-    const map = this.create_map_params(hostid, triggers, mapSize, images, 50);
-    return z.map.create(map);
+    const hosts = await this.get_hosts_by_id(z, hostid);
+    const map = this.create_map_params(hosts[0], triggers, mapSize, images, 50);
+    const response = await z.map.create(map);
+    if(response.sysmapids){
+      return this.createMapLink(z, response.sysmapids[0]);
+    } else {
+      return response;
+    }
   }
 
-  create_map_params(hostid, triggers, mapSize, images, gap){
+  createMapLink(z, sysmapid) {
+    return z.req.host + '/zabbix.php?action=map.view&sysmapid=' + sysmapid;
+  }
+
+  create_map_params(host, triggers, mapSize, images, gap){
     const selements = this.create_selements(triggers, images, gap);
     const params = {
-      "name": hostid + ' trigger MAP',
+      "name": host.name + ' MAP',
       "width": mapSize[0],
       "height": mapSize[1],
+      "label_format": 1,
+      "label_type_trigger": 0,
       "selements": selements
     }
     return params;
   }
 
+  get_image_id(images, name){
+    return images.find(image => image.name == name).imageid
+  }
+
   create_selements(triggers, images, gap) {
-    let x = 0;
+    let x = 50;
     let y = 100;
-    let label_location = 3;
-    let iconOff = '01-Port-Up';
-    let iconDisabled = '01-Port-Disabled';
-    let iconMaintenance = '01-Port-Warning';
-    let iconOn = '01-Port-Down';
-    
+    const label_locationUp = 3;
+    const label_locationDown = 0;
+    const iconsDownIds = imageNames.iconsDown.map((name) => {return this.get_image_id(images, name);});
+    const iconsUpIds = imageNames.iconsUp.map((name) => {return this.get_image_id(images, name);});
+
     const selements =  triggers.map((trigger, index) => {
-      x = gap*(index+1);
-      if (index > (triggers.length-1)/2){
-        x -= (triggers.length/2)*gap;
+      let element;
+
+      if (index % 2 == 1){
         y = 150;
-        label_location = 0;
-        iconOff = '02-Port-Up';
-        iconDisabled = '02-Port-Disabled';
-        iconMaintenance = '02-Port-Warning';
-        iconOn = '02-Port-Down';
+        element = this.create_element(trigger.triggerid, trigger.label, label_locationDown, iconsDownIds, x, y);
+        x += gap;
+      } else {
+        y = 100;
+        element = this.create_element(trigger.triggerid, trigger.label, label_locationUp, iconsUpIds, x, y);
       }
-      const element = {
-        "elements": [
-          {"triggerid": trigger.triggerid}
-        ],
-        "label_location": label_location,
-        "elementtype": 2,
-        "iconid_off": images.find(image => image.name == iconOff).imageid,
-        "iconid_disabled": images.find(image => image.name == iconDisabled).imageid,
-        "iconid_maintenance": images.find(image => image.name == iconMaintenance).imageid,
-        "iconid_on": images.find(image => image.name == iconOn).imageid,
-        "x": x,
-        "y": y
-      }
+
       return element;
     });
 
     return selements;
+  }
+
+  create_element(triggerid, label, label_location, iconsIds, x, y){
+    const element = {
+      "elements": [
+        {"triggerid": triggerid}
+      ],
+      "label_location": label_location,
+      "label": label,
+      "elementtype": 2,
+      "iconid_off": iconsIds[0],
+      "iconid_disabled": iconsIds[1],
+      "iconid_maintenance": iconsIds[2],
+      "iconid_on": iconsIds[3],
+      "x": x,
+      "y": y
+    }
+    return element;
   }
 
   compute_map_size(triggers_count, gap) {
@@ -116,32 +159,59 @@ class ZabbixService {
     return [width, 300];
   }
 
-  get_triggers_by_hostid(z, hostid){
+  get_hosts_by_id(z, hostids) {
+    const params = {
+      'hostids': hostids
+    };
+    return z.host.get(params);
+  }
+
+  async get_triggers_by_hostid(z, hostid){
     const params = {
       "filter": {
         "hostid": hostid
       }
     }
-    return z.trigger.get(params);;
+    const triggers = await z.trigger.get(params);
+
+    let filtered = []; 
+    triggers.forEach((trigger) => {
+      if (trigger.description.includes("Link down")){
+        const name = trigger.description;
+        const label = name.substring(name.lastIndexOf('/')+1, name.indexOf("("));
+        trigger.label = Number(label);
+        console.log(trigger.label);
+        console.log(typeof trigger.label)
+        filtered.push(trigger);
+      }
+    });
+
+    filtered.sort((a, b) => a.label - b.label);
+    return filtered;
   }
 
   async prepare_images(z) {
     l.info(`${this.constructor.name}.prepare_images()`);
     const imagesDirPath = path.resolve(__dirname, '../../images');
     const images = fs.readdirSync(imagesDirPath);
-    const imageNames = images.map((filename) => {return path.basename(filename, '.png')});
-
-    if(!await this.check_images(z, imageNames)){
-      this.upload_images(z, imagesDirPath, imageNames)
+    const names = []; 
+    images.forEach((filename) => {
+      if (path.extname(filename) == '.png') {
+        names.push(path.basename(filename, '.png'));
+      }
+    });
+    console.log(names)
+    if(!await this.check_images(z, names)){
+      this.upload_images(z, imagesDirPath, names)
     }
 
-    return this.find_images_by_names(z, imageNames);
+    return this.find_images_by_names(z, names);
   }
 
-  async check_images(z, imageNames) {
+  async check_images(z, names) {
     const result = await this.find_images_by_names(z, imageNames);
     
-    return result.length == imageNames.length;
+    return result.length == names.length;
   }
 
   async find_images_by_names(z, imageNames) {

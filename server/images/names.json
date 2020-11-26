@@ -1,0 +1,13 @@
+{
+    "iconOffUp": "01-Port-Up",
+    "iconDisabledUp": "01-Port-Disabled",
+    "iconMaintenanceUp": "01-Port-Warning",
+    "iconOnUp": "01-Port-Down",
+    "iconOffDown": "02-Port-Up",
+    "iconDisabledDown": "02-Port-Disabled",
+    "iconMaintenanceDown": "02-Port-Warning",
+    "iconOnDown": "02-Port-Down",
+    
+    "iconsUp": ["01-Port-Up", "01-Port-Disabled", "01-Port-Warning", "01-Port-Down"],
+    "iconsDown":["02-Port-Up", "02-Port-Disabled", "02-Port-Warning", "02-Port-Down"]
+}
