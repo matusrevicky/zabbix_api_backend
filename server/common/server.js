@@ -8,8 +8,10 @@ import * as os from 'os';
 import l from './logger';
 import * as OpenApiValidator from 'express-openapi-validator';
 import errorHandler from '../api/middlewares/error.handler';
+var timeout = require('connect-timeout')
 
 const app = new Express();
+app.use(timeout('60s'))
 
 //**********testing start*************
 // just for testing purposes memorystore gets deleted when server is restrted
@@ -49,8 +51,8 @@ export default class ExpressServer {
     // });
 
 
-//**********testing start*************
-// just for testing purposes memorystore gets deleted when server is restrted
+    //**********testing start*************
+    // just for testing purposes memorystore gets deleted when server is restrted
     app.use(session({
       cookie: { maxAge: 86400000 },
       store: new MemoryStore({
@@ -60,8 +62,8 @@ export default class ExpressServer {
       resave: false,
       secret: process.env.SESSION_SECRET || 'secretToBeChangedInEnvironment'
     }))
-//**********testing end*********** */
-    
+    //**********testing end*********** */
+
 
     const corsOptions = {
       origin: true,
@@ -69,14 +71,14 @@ export default class ExpressServer {
     }
     app.use(cors(corsOptions));
     app.set('appPath', `${root}client`);
-    app.use(bodyParser.json({ limit: process.env.REQUEST_LIMIT || '500kb' }));
+    app.use(bodyParser.json({ limit: process.env.REQUEST_LIMIT || '500mb' }));
     app.use(
       bodyParser.urlencoded({
         extended: true,
-        limit: process.env.REQUEST_LIMIT || '100kb',
+        limit: process.env.REQUEST_LIMIT || '500mb',
       })
     );
-    app.use(bodyParser.text({ limit: process.env.REQUEST_LIMIT || '100kb' }));
+    app.use(bodyParser.text({ limit: process.env.REQUEST_LIMIT || '500mb' }));
     app.use(cookieParser(process.env.SESSION_SECRET));
     app.use(Express.static(`${root}/public`));
 
@@ -88,10 +90,10 @@ export default class ExpressServer {
         ignorePaths: /.*\/spec(\/|$)/,
       })
     );
-  //**********testing start*************
-  // just for testing purposes memorystore gets deleted when server is restrted
+    //**********testing start*************
+    // just for testing purposes memorystore gets deleted when server is restrted
     app.use(middlewareZabbix);
-  //**********testing end*********** */  
+    //**********testing end*********** */  
   }
 
   router(routes) {
@@ -107,8 +109,25 @@ export default class ExpressServer {
         } @: ${os.hostname()} on port: ${p}}`
       );
 
+    // var cluster = require('cluster');
+
+    // if (cluster.isMaster) {
+    //   // Create a worker for each CPU
+    //   for (var i = 0; i <  require('os').cpus().length; i++) {
+    //     cluster.fork();
+    //   }
+
+    //   cluster.on('online', function (worker) {
+    //     console.log('Worker ' + worker.process.pid + ' is online.');
+    //   });
+    //   cluster.on('exit', function (worker, code, signal) {
+    //     console.log('worker ' + worker.process.pid + ' died.');
+    //   });
+    // }
+    // else {
     http.createServer(app).listen(port, welcome(port));
 
     return app;
+    // }
   }
 }

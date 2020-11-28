@@ -75,13 +75,19 @@ class ZabbixService {
   }
 
   async create_map(z, hostid) {
+    l.info(`${this.constructor.name}.create_map(${hostid})`);
+   
     const triggers = await this.get_triggers_by_hostid(z, hostid);
     // console.log(triggers)
     const mapSize = this.compute_map_size(triggers.length, 50);
     const images = await this.prepare_images(z);
     const hosts = await this.get_hosts_by_id(z, hostid);
     const map = this.create_map_params(hosts[0], triggers, mapSize, images, 50);
+
+    console.time('mapcreate')
     const response = await z.map.create(map);
+    console.timeEnd('mapcreate')
+
     if(response.sysmapids){
       return this.createMapLink(z, response.sysmapids[0]);
     } else {
@@ -180,8 +186,8 @@ class ZabbixService {
         const name = trigger.description;
         const label = name.substring(name.lastIndexOf('/')+1, name.indexOf("("));
         trigger.label = Number(label);
-        console.log(trigger.label);
-        console.log(typeof trigger.label)
+        // console.log(trigger.label);
+        // console.log(typeof trigger.label)
         filtered.push(trigger);
       }
     });
@@ -200,7 +206,7 @@ class ZabbixService {
         names.push(path.basename(filename, '.png'));
       }
     });
-    console.log(names)
+    // console.log(names)
     if(!await this.check_images(z, names)){
       this.upload_images(z, imagesDirPath, names)
     }
@@ -209,7 +215,7 @@ class ZabbixService {
   }
 
   async check_images(z, names) {
-    const result = await this.find_images_by_names(z, imageNames);
+    const result = await this.find_images_by_names(z, names);
     
     return result.length == names.length;
   }
