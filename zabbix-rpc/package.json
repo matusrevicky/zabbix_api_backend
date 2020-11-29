@@ -1,0 +1,63 @@
+{
+  "_from": "zabbix-rpc@^1.2.1",
+  "_id": "zabbix-rpc@1.2.1",
+  "_inBundle": false,
+  "_integrity": "sha512-eFr78MVBB9zK2ELfOTJejTn9Yy0+f/Bv2TzLj6IMMu9Pf+s/UBA9o9S4rHBqxFrQOPm+4ykJIzmkShwox7sWfg==",
+  "_location": "/zabbix-rpc",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "zabbix-rpc@^1.2.1",
+    "name": "zabbix-rpc",
+    "escapedName": "zabbix-rpc",
+    "rawSpec": "^1.2.1",
+    "saveSpec": null,
+    "fetchSpec": "^1.2.1"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/zabbix-rpc/-/zabbix-rpc-1.2.1.tgz",
+  "_shasum": "45ded6321ecd4e94255519050be7423810ce26a9",
+  "_spec": "zabbix-rpc@^1.2.1",
+  "_where": "C:\\Users\\user\\Desktop\\UPJS\\Studium_materialy_ku_predmetom\\4.rocnik zadania\\ZimnySemester\\Projekt\\zabbix_api_backend",
+  "author": {
+    "name": "Facundo Zaldo"
+  },
+  "bugs": {
+    "url": "https://github.com/FaCuZ/zabbix-rpc/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "axios": "^0.20.0"
+  },
+  "deprecated": false,
+  "description": "A powerfull and easy to use Zabbix API integrator",
+  "devDependencies": {
+    "coveralls": "^3.1.0",
+    "jest": "^26.4.2"
+  },
+  "homepage": "https://github.com/FaCuZ/zabbix-rpc#readme",
+  "keywords": [
+    "zabbix",
+    "jsonrpc",
+    "API",
+    "Monitoring"
+  ],
+  "license": "ISC",
+  "main": "./lib/Zabbix.js",
+  "name": "zabbix-rpc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FaCuZ/zabbix-rpc.git"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:coveralls": "jest --coverage && coveralls < coverage/lcov.info",
+    "test:watch": "jest --watch"
+  },
+  "version": "1.2.1"
+}

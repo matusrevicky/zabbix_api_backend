@@ -1,4 +1,4 @@
-var Zabbix = require('zabbix-rpc');
+var Zabbix = require('../../../zabbix-rpc');
 
 module.exports = async function log(req, res, next) {
   // if user tries to login multiple times from the same browser, only the same session is returned (if previous login attempts was successfull) 
