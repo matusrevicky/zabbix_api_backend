@@ -1,6 +1,9 @@
 # zabbix_rest_api_open_api_3
 
-My cool app
+It is important to notice, that from now on url has to contain https or http in front of adress
+```
+UrlAddress: https://zabbix.csirt.upjs.sk/
+```
 
 ## Get Started
 
