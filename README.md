@@ -1,5 +1,7 @@
 # zabbix_rest_api_open_api_3
 
+Tested using node js v14.15.1
+
 It is important to notice, that from now on url has to contain https or http in front of adress
 ```
 UrlAddress: https://zabbix.csirt.upjs.sk/
