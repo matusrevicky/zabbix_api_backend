@@ -4,6 +4,8 @@ import cookieParser from 'cookie-parser';
 import * as path from 'path';
 import * as bodyParser from 'body-parser';
 import * as http from 'http';
+import * as https from 'https';
+import * as fs from 'fs';
 import * as os from 'os';
 import l from './logger';
 import * as OpenApiValidator from 'express-openapi-validator';
@@ -54,7 +56,10 @@ export default class ExpressServer {
     //**********testing start*************
     // just for testing purposes memorystore gets deleted when server is restrted
     app.use(session({
-      cookie: { maxAge: 86400000 },
+      cookie: { httpOnly: false,
+        // secure: true, // comment out if using http server
+        maxAge: 86400000 
+      },
       store: new MemoryStore({
         checkPeriod: 86400000 // prune expired entries every 24h
       }),
@@ -125,7 +130,19 @@ export default class ExpressServer {
     //   });
     // }
     // else {
-    http.createServer(app).listen(port, welcome(port));
+    
+    const sslPath = path.resolve(__dirname, '../ssl');
+    const key = fs.readFileSync(path.join(sslPath, 'key.pem'));
+    const ca = fs.readFileSync(path.join(sslPath, 'csr.pem'));
+    const cert = fs.readFileSync(path.join(sslPath, 'cert.pem'));
+    const credentials = {
+      key: key,
+      ca: ca,
+      cert: cert
+    }
+
+    // https.createServer(credentials, app).listen(port, welcome(port));
+    http.createServer(app).listen(port, welcome(port)); // comment out secure attribute in cookie
 
     return app;
     // }

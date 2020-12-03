@@ -63,9 +63,10 @@ class ZabbixService {
     var z = await new Zabbix(req.session.host);
     await z.user.login(req.session.user, req.session.pass);
 
+    const images = await this.prepare_images(z);
     const hostids = req.body.hostids;
     const promises = hostids.map(async (hostid) => {
-      return this.create_map(z, hostid);
+      return this.create_map(z, hostid, images);
     });
 
     var results = await Promise.all(promises);
@@ -73,13 +74,12 @@ class ZabbixService {
     return results;
   }
 
-  async create_map(z, hostid) {
+  async create_map(z, hostid, images) {
     l.info(`${this.constructor.name}.create_map(${hostid})`);
 
     const triggers = await this.get_triggers_by_hostid(z, hostid);
     // console.log(triggers)
     const mapSize = this.compute_map_size(triggers.length, 50);
-    const images = await this.prepare_images(z);
     const hosts = await this.get_hosts_by_id(z, hostid);
     const map = this.create_map_params(hosts[0], triggers, mapSize, images, 50);
 
