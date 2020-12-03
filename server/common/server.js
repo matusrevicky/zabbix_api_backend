@@ -65,11 +65,11 @@ export default class ExpressServer {
       }),
       saveUninitialized: false,
       resave: false,
-      secret: process.env.SESSION_SECRET || 'secretToBeChangedInEnvironment'
+        secret: process.env.SESSION_SECRET || 'secretToBeChangedInEnvironment',
     }))
     //**********testing end*********** */
 
-
+    // fronend does not work without cors module
     const corsOptions = {
       origin: true,
       credentials: true
@@ -95,10 +95,9 @@ export default class ExpressServer {
         ignorePaths: /.*\/spec(\/|$)/,
       })
     );
-    //**********testing start*************
-    // just for testing purposes memorystore gets deleted when server is restrted
+
+    // middlewareZabbix uses express-sessions
     app.use(middlewareZabbix);
-    //**********testing end*********** */  
   }
 
   router(routes) {
@@ -113,38 +112,23 @@ export default class ExpressServer {
         `up and running in ${process.env.NODE_ENV || 'development'
         } @: ${os.hostname()} on port: ${p}}`
       );
-
-    // var cluster = require('cluster');
-
-    // if (cluster.isMaster) {
-    //   // Create a worker for each CPU
-    //   for (var i = 0; i <  require('os').cpus().length; i++) {
-    //     cluster.fork();
-    //   }
-
-    //   cluster.on('online', function (worker) {
-    //     console.log('Worker ' + worker.process.pid + ' is online.');
-    //   });
-    //   cluster.on('exit', function (worker, code, signal) {
-    //     console.log('worker ' + worker.process.pid + ' died.');
-    //   });
-    // }
-    // else {
     
-    const sslPath = path.resolve(__dirname, '../ssl');
-    const key = fs.readFileSync(path.join(sslPath, 'key.pem'));
-    const ca = fs.readFileSync(path.join(sslPath, 'csr.pem'));
-    const cert = fs.readFileSync(path.join(sslPath, 'cert.pem'));
-    const credentials = {
-      key: key,
-      ca: ca,
-      cert: cert
-    }
-
+    // using secure cookies required https server, https://stackoverflow.com/questions/60536376/how-to-validate-session-on-react-client-after-successful-authentication-from-exp    
+    // const sslPath = path.resolve(__dirname, '../ssl');
+    // const key = fs.readFileSync(path.join(sslPath, 'key.pem'));
+    // const ca = fs.readFileSync(path.join(sslPath, 'csr.pem'));
+    // const cert = fs.readFileSync(path.join(sslPath, 'cert.pem'));
+    // const credentials = {
+    //   key: key,
+    //   ca: ca,
+    //   cert: cert
+    // }
     // https.createServer(credentials, app).listen(port, welcome(port));
+
+
     http.createServer(app).listen(port, welcome(port)); // comment out secure attribute in cookie
 
     return app;
-    // }
+
   }
 }

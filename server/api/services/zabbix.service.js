@@ -58,6 +58,7 @@ class ZabbixService {
     return hostsWithMap;
   }
 
+
   async create_maps(req) {
     l.info(`${this.constructor.name}.create_maps()`);
     var z = await new Zabbix(req.session.host);
@@ -74,15 +75,19 @@ class ZabbixService {
     return results;
   }
 
+
+  /******** Below are just helper functions **********/
+
   async create_map(z, hostid, images) {
     l.info(`${this.constructor.name}.create_map(${hostid})`);
-
+    
+    
     const triggers = await this.get_triggers_by_hostid(z, hostid);
     // console.log(triggers)
     const mapSize = this.compute_map_size(triggers.length, 50);
     const hosts = await this.get_hosts_by_id(z, hostid);
     const map = this.create_map_params(hosts[0], triggers, mapSize, images, 50);
-
+    
     console.time('mapcreate' + map.name);
     const response = await z.map.create(map);
     console.timeEnd('mapcreate' + map.name);
@@ -204,6 +209,7 @@ class ZabbixService {
           name.indexOf('(')
         );
         trigger.label = Number(label);
+        // sometimes triggers in zabbix do not have labels, but they should
         // console.log(trigger.label);
         // console.log(typeof trigger.label)
         filtered.push(trigger);

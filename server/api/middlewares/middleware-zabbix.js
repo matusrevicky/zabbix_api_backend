@@ -1,11 +1,9 @@
-var Zabbix = require('../../../zabbix-rpc');
+import Zabbix from '../../../zabbix-rpc';
 
 module.exports = async function log(req, res, next) {
-  // if user tries to login multiple times from the same browser, only the same session is returned (if previous login attempts was successfull) 
-  // if no session is in store, create new and map zabbix instance
-  // if session in store is destroyed(every session gets destroyed after time), create new and map zabbix instance (possible problem: previous mapping remains after some time mapping dictionary is too big)
-
   
+  // if user tries to login multiple times from the same browser, only the same session is returned (if previous login attempt was successfull) 
+  // if no session is in store, create new
   if (!req.session.host || !req.session.user || !req.session.pass) {
     // TODO Do not use in production!!!!!
     process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
@@ -18,7 +16,7 @@ module.exports = async function log(req, res, next) {
     });
     await zabbix.user.logout()
 
-    console.log(req.body.username+" "+req.body.password +" "+req.body.url)
+    console.log(req.body.username+" "+req.body.url)
     if (is_not_error) {
       if (!req.session.host || !req.session.user || !req.session.pass) {
         req.session.host = req.body.url;
@@ -33,7 +31,7 @@ module.exports = async function log(req, res, next) {
       }
 
     } else {
-      return res.status(500).send("Wrong login info. Log in again!!!");
+      return res.status(404).send("Wrong login info. Log in again!!!");
     }
 
   }
