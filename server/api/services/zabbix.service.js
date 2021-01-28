@@ -176,6 +176,11 @@ class ZabbixService {
       iconid_on: iconsIds[3],
       x: x,
       y: y,
+      urls: [{
+        name: "name"+x,
+        url: "www.google.com",
+      }]
+      
     };
     return element;
   }
