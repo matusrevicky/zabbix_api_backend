@@ -237,10 +237,10 @@ class ZabbixService {
     });
     // console.log(names)
     if (!(await this.check_images(z, names))) {
-      this.upload_images(z, imagesDirPath, names);
+      await this.upload_images(z, imagesDirPath, names);
     }
 
-    return this.find_images_by_names(z, names);
+    return await this.find_images_by_names(z, names);
   }
 
   async check_images(z, names) {
@@ -249,24 +249,36 @@ class ZabbixService {
     return result.length == names.length;
   }
 
-  async find_images_by_names(z, imageNames) {
+  async find_images_by_names(z, imageNames) { 
+    console.log(imageNames)
     const params = {
       filter: { name: imageNames },
       imagetype: '1', // 1 - icon, 2 - background
     };
-    return await z.image.get(params);
+
+    const temp = await z.image.get(params);
+    console.log(temp)
+    return await temp; 
   }
 
-  upload_images(z, imagesDirPath, imageNames) {
+ async upload_images(z, imagesDirPath, imageNames) {
     l.info(
       `${this.constructor.name}.upload_images(${imagesDirPath}, ${imageNames})`
     );
-    imageNames.forEach(async (imageName) => {
-      await this.upload_one_image(z, imagesDirPath, imageName);
-    });
+
+    // SOLVES ISSUE: sometimes icons were created after they are called with get and ends with error
+    // issue is solved
+    await Promise.all(imageNames.map(async (imageName) => {
+      const contents = await this.upload_one_image(z, imagesDirPath, imageName)
+      // console.log(contents)
+    }));
+
+    // imageNames.forEach(async (imageName) => {
+    //   await this.upload_one_image(z, imagesDirPath, imageName); 
+    // });
   }
 
-  async upload_one_image(z, imageDirPath, imageName) {
+  upload_one_image(z, imageDirPath, imageName) {
     l.info(`${this.constructor.name}.upload_one_image(${imageName})`);
     const image = fs.readFileSync(
       path.resolve(imageDirPath, imageName + '.png'),
