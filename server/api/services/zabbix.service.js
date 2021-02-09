@@ -5,6 +5,8 @@ import Zabbix from '../../../zabbix-rpc';
 import imageNames from '../../images/names.json';
 import utils from '../../common/utils';
 
+const map_suffix = ' MAP created by webapp';
+
 class ZabbixService {
   async login(req) {
     l.info(`${this.constructor.name}.login()`);
@@ -47,7 +49,7 @@ class ZabbixService {
     const result = hosts.map(async (host) => {
       const params = {
         filter: {
-          name: host.name + ' MAP',
+          name: host.name + map_suffix
         },
       };
       const map = await z.map.get(params);
@@ -67,8 +69,10 @@ class ZabbixService {
     var z = await new Zabbix(req.session.host);
     await z.user.login(req.session.user, req.session.pass);
 
-    const images = await this.prepare_images(z);
     const hostids = req.body.hostids;
+    await this.deleteMapsifExist(z, hostids);
+
+    const images = await this.prepare_images(z);
     const promises = hostids.map(async (hostid) => {
       return this.create_map(z, hostid, images);
     });
@@ -81,12 +85,31 @@ class ZabbixService {
 
   /******** Below are just helper functions **********/
 
+  async deleteMapsifExist(z, hostids){
+    const hosts = await z.host.get({hostids: hostids});
+    const names = hosts.map((host) => {
+      return host.host + map_suffix;
+    })
+
+    const params = {
+      filter: {
+        name: names,
+      },
+    };
+    const maps = await z.map.get(params);
+
+    const sysmapids = maps.map((map) => {
+      return map.sysmapid;
+    })
+
+    z.map.delete(sysmapids)
+  }
+
   async create_map(z, hostid, images) {
     l.info(`${this.constructor.name}.create_map(${hostid})`);
     
     
     const triggers = await this.get_triggers_by_hostid(z, hostid);
-    // console.log(triggers)
     const mapSize = this.compute_map_size(triggers.length, 50);
     const hosts = await this.get_hosts_by_id(z, hostid);
     const map = this.create_map_params(hosts[0], triggers, mapSize, images, 50);
@@ -96,7 +119,7 @@ class ZabbixService {
     console.timeEnd('mapcreate' + map.name);
 
     if (response.sysmapids) {
-      return this.createMapLink(z, response.sysmapids[0]);
+      return {map_name: map.name, map_link: this.createMapLink(z, response.sysmapids[0])};
     } else {
       return response;
     }
@@ -109,7 +132,7 @@ class ZabbixService {
   create_map_params(host, triggers, mapSize, images, gap) {
     const selements = this.create_selements(triggers, images, gap);
     const params = {
-      name: host.name + ' MAP',
+      name: host.name + map_suffix,
       width: mapSize[0],
       height: mapSize[1],
       label_format: 1,
@@ -208,24 +231,16 @@ class ZabbixService {
     };
     const triggers = await z.trigger.get(params);
 
-    let filtered = [];
-    triggers.forEach((trigger) => {
-      if (trigger.description.includes('Link down')) {
-        const name = trigger.description;
-        const label = name.substring(
-          name.lastIndexOf('/') + 1,
-          name.indexOf('(')
-        );
-        trigger.label = Number(label);
-        // sometimes triggers in zabbix do not have labels, but they should
-        // console.log(trigger.label);
-        // console.log(typeof trigger.label)
-        filtered.push(trigger);
-      }
-    });
+    const triggerRegEx = /Interface (GigabitEthernet|Gi|FastEthernet|Fa)(.*)\(.*\): Link down/;
+    const filteredTriggers = triggers.filter(trigger => triggerRegEx.test(trigger.description));    
 
-    filtered.sort((a, b) => a.label - b.label);
-    return filtered;
+    const modifiedTriggers = filteredTriggers.map(trigger => {
+      trigger.label = trigger.description.replace(triggerRegEx, "$1$2");
+      return trigger;
+    })
+
+    modifiedTriggers.sort((a,b) => (a.label < b.label) ? -1 : (a.label > b.label) ? 1 : 0);
+    return modifiedTriggers;
   }
 
   async prepare_images(z) {
