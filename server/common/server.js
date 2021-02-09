@@ -11,6 +11,8 @@ import l from './logger';
 import * as OpenApiValidator from 'express-openapi-validator';
 import errorHandler from '../api/middlewares/error.handler';
 var timeout = require('connect-timeout')
+const jwt = require('jsonwebtoken');
+const utils = require('./utils');
 
 const app = new Express();
 app.use(timeout('60s'))
@@ -36,6 +38,56 @@ export default class ExpressServer {
       process.env.OPENAPI_ENABLE_RESPONSE_VALIDATION.toLowerCase() === 'true'
     );
 
+    // fronend does not work without cors module
+    const corsOptions = {
+      origin: true,
+      credentials: true
+    }
+    app.use(cors(corsOptions));
+
+    //************ jwm token verification start
+    // based on https://www.cluemediator.com/create-rest-api-for-authentication-in-node-js-using-jwt
+    app.use(function (req, res, next) {
+      // check header or url parameters or post parameters for token
+      var token = req.headers['authorization'];
+      if (!token) return next(); //if no token, continue
+
+      token = token.replace('Bearer ', '');
+      jwt.verify(token, process.env.JWT_SECRET, function (err, user) {
+        if (err) {
+          return res.status(401).json({
+            error: true,
+            message: "Invalid user."
+          });
+        } else {
+          req.user = user; //set the user to req so other routes can use it
+          next();
+        }
+      });
+    });
+
+    // verify the token and return it if it's valid
+    app.get('/verifyToken', function (req, res) {
+      // check header or url parameters or post parameters for token
+      var token = req.query.token;
+      if (!token) {
+        return res.status(400).json({
+          error: true,
+          message: "Token is required."
+        });
+      }
+      // check token that was passed by decoding token using secret
+      jwt.verify(token, process.env.JWT_SECRET, function (err, user) {
+        if (err) return res.status(401).json({
+          error: true,
+          message: "Invalid token."
+        });
+        return res.json({ user: user, token });
+      });
+    });
+    //************ jwm token verification end
+
+
     // app.use(session({
     //   secret: process.env.SESSION_SECRET,
     //   // create new redis store.
@@ -56,25 +108,21 @@ export default class ExpressServer {
     //**********testing start*************
     // just for testing purposes memorystore gets deleted when server is restrted
     app.use(session({
-      cookie: { httpOnly: false,
+      cookie: {
+        httpOnly: false,
         // secure: true, // comment out if using http server
-        maxAge: 86400000 
+        maxAge: 86400000
       },
       store: new MemoryStore({
         checkPeriod: 86400000 // prune expired entries every 24h
       }),
       saveUninitialized: false,
       resave: false,
-        secret: process.env.SESSION_SECRET || 'secretToBeChangedInEnvironment',
+      secret: process.env.SESSION_SECRET || 'secretToBeChangedInEnvironment',
     }))
     //**********testing end*********** */
 
-    // fronend does not work without cors module
-    const corsOptions = {
-      origin: true,
-      credentials: true
-    }
-    app.use(cors(corsOptions));
+
     app.set('appPath', `${root}client`);
     app.use(bodyParser.json({ limit: process.env.REQUEST_LIMIT || '500mb' }));
     app.use(
@@ -112,7 +160,7 @@ export default class ExpressServer {
         `up and running in ${process.env.NODE_ENV || 'development'
         } @: ${os.hostname()} on port: ${p}}`
       );
-    
+
     // using secure cookies required https server, https://stackoverflow.com/questions/60536376/how-to-validate-session-on-react-client-after-successful-authentication-from-exp    
     // const sslPath = path.resolve(__dirname, '../ssl');
     // const key = fs.readFileSync(path.join(sslPath, 'key.pem'));

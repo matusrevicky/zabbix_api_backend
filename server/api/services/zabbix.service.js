@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import Zabbix from '../../../zabbix-rpc';
 import imageNames from '../../images/names.json';
+import utils from '../../common/utils';
 
 class ZabbixService {
   async login(req) {
@@ -11,7 +12,9 @@ class ZabbixService {
     var sessionid = await z.user.login(req.session.user, req.session.pass);
     var user = await z.user.check(sessionid);
     await z.user.logout();
-    return user;
+
+    const token = utils.generateToken(user);
+    return { user: user, token };
   }
 
   // destroys session in session store
