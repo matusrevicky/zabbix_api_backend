@@ -138,9 +138,17 @@ components:
           items:
             type: integer
             example: 4
-
           
     Login200:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/Login200test"
+        token:
+          type: string
+          example: hdfghwrgrs
+
+    Login200test:
       type: object
       properties:
         userid:
@@ -200,6 +208,7 @@ components:
         gui_access:
           type: integer
           example: 0
+      
 
     CreateMaps:
       type: object
