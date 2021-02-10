@@ -231,7 +231,7 @@ class ZabbixService {
     };
     const triggers = await z.trigger.get(params);
 
-    const triggerRegEx = /Interface (GigabitEthernet|Gi|FastEthernet|Fa)(.*)\(.*\): Link down/;
+    const triggerRegEx = /.*Interface (GigabitEthernet|Gi|FastEthernet|Fa)(.*)\(.*\): Link down/;
     const filteredTriggers = triggers.filter(trigger => triggerRegEx.test(trigger.description));    
 
     const modifiedTriggers = filteredTriggers.map(trigger => {
