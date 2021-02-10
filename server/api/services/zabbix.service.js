@@ -102,6 +102,7 @@ class ZabbixService {
       return map.sysmapid;
     })
 
+    l.info(`${this.constructor.name}.delete_maps(${sysmapids})`);
     z.map.delete(sysmapids)
   }
 
@@ -202,8 +203,9 @@ class ZabbixService {
       iconid_on: iconsIds[3],
       x: x,
       y: y,
+      // does not work as expected, creates https://zabbix.csirt.upjs.sk/www.google.com
       urls: [{
-        name: "name"+x,
+        name: "test"+x,
         url: "www.google.com",
       }]
       
@@ -231,7 +233,7 @@ class ZabbixService {
     };
     const triggers = await z.trigger.get(params);
 
-    const triggerRegEx = /.*Interface (GigabitEthernet|Gi|FastEthernet|Fa)(.*)\(.*\): Link down/;
+    const triggerRegEx = /.*Interface (GigabitEthernet|Gi|FastEthernet|Fa)(.*?)\(.*\): Link down/;
     const filteredTriggers = triggers.filter(trigger => triggerRegEx.test(trigger.description));    
 
     const modifiedTriggers = filteredTriggers.map(trigger => {
